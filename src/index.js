@@ -1,9 +1,11 @@
+import 'regenerator-runtime/runtime'
 import * as Tone from 'tone'
 
 /**
  * Represent the state of the application.
  * @typedef {Object} State
  * @property {string} tone - The tone to be played
+ * @property {string[]} allTones - all the available tones to be tested
  */
 
 /**
@@ -12,22 +14,31 @@ import * as Tone from 'tone'
  */
 function initializeState() {
     const allTones = [
-        "C3", "D3", "E3", "F3", "G3", "A3", "H3", "C4"
+        "C3", "D3", "E3", "F3", "G3", "A3", "B3", "C4"
     ];
 
     return {
       allTones: allTones,
-      tone: pickNextTone(allTones)
+      tone: allTones[Math.floor(Math.random() * allTones.length)]
     }
 }
 
 /**
- * Randomly pick the next tone.
- * @param {string[]} allTones
- * @return {string} one of the allTones
+ * Randomly pick the next tone without repeating the current one.
+ * @param {string} currentTone the currently playing tone
+ * @param {string[]} allTones available tones to choose from
+ * @return {string} randomly selected tone
  */
-function pickNextTone(allTones) {
-    return allTones[Math.floor(Math.random() * allTones.length)];
+function nextTone(currentTone, allTones) {
+    let tone = allTones[
+        Math.floor(Math.random() * allTones.length)];
+
+    while(tone === currentTone) {
+        tone = allTones[
+            Math.floor(Math.random() * allTones.length)];
+    }
+
+    return tone;
 }
 
 
@@ -36,7 +47,8 @@ function pickNextTone(allTones) {
  * @param {State} state
  * @param synth initialized synthesizer
  */
-function play(state, synth) {
+const play = async (state, synth) => {
+    await Tone.start();
     synth.triggerAttackRelease(state.tone, "4n");
 }
 
@@ -56,7 +68,7 @@ function hide() {
         "<i>Press \"reveal\" for revelation</i>");
 }
 
-window.onload = function(event) {
+window.onload = function() {
     const state = initializeState();
     const synth = new Tone.Synth().toDestination();
 
@@ -70,7 +82,7 @@ window.onload = function(event) {
     document.getElementById("next").addEventListener("click",
         function() {
             hide();
-            state.tone = pickNextTone(state.allTones);
+            state.tone = nextTone(state.tone, state.allTones);
             play(state, synth);
         });
 
